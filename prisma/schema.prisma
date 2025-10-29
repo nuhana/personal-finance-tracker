@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  CASH
+  BANK
+  CARD
+}
+
+enum FlowType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  name         String?
+  image        String?
+  accounts     Account[]
+  categories   Category[]
+  budgets      Budget[]
+  transactions Transaction[]
+}
+
+model Account {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  name         String
+  type         AccountType   @default(CASH)
+  balance      Decimal       @default(0)
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  name         String
+  type         FlowType      @default(EXPENSE)
+  color        String?
+  createdAt    DateTime      @default(now())
+  budgets      Budget[]
+  transactions Transaction[]
+}
+
+model Transaction {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  accountId  String
+  account    Account   @relation(fields: [accountId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  amount     Decimal
+  date       DateTime
+  note       String?
+  createdAt  DateTime  @default(now())
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  month      Int
+  year       Int
+  limit      Decimal  @default(0)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, categoryId, month, year])
+}
