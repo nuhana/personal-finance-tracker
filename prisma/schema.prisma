@@ -30,15 +30,16 @@ model User {
 }
 
 model Account {
-  id           String        @id @default(cuid())
-  userId       String
-  user         User          @relation(fields: [userId], references: [id])
-  name         String
-  type         AccountType   @default(CASH)
-  balance      Decimal       @default(0)
-  createdAt    DateTime      @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  type      AccountType @default(CASH)
+  balance   Decimal  @default(0)   // 👈 this IS your wallet balance
+  createdAt DateTime @default(now())
   transactions Transaction[]
 }
+
 
 model Category {
   id           String        @id @default(cuid())
