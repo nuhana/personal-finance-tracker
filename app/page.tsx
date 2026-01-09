@@ -1,11 +1,6 @@
-import { Wallet } from "@/components/wallet/page";
+import { Wallet } from "@/components/Wallet/page";
 
 export default function Dashboard() {
-  //  useEffect(() => {
-  //   getWallet().then(setWallet);
-  // }, []);
-
-  // if (!wallet) return <p>Loading...</p>;
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Sidebar */}
@@ -13,12 +8,17 @@ export default function Dashboard() {
         <div>
           {/* Profile */}
           <div className="flex items-center space-x-3 p-3 mb-6">
-            <img src="/avatar.png" alt="User" className="w-12 h-12 rounded-full" />
+            <img
+              src="/avatar.png"
+              alt="User"
+              className="w-12 h-12 rounded-full"
+            />
             <div>
               <h3 className="font-semibold text-slate-800">Gadiel Machado</h3>
               <p className="text-xs text-slate-500">Designer</p>
             </div>
           </div>
+
           {/* Nav Links */}
           <nav className="space-y-2">
             <NavItem icon="📊" label="Dashboard" active />
@@ -42,6 +42,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+
           <input
             type="text"
             placeholder="Search..."
@@ -51,44 +52,35 @@ export default function Dashboard() {
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left (Wallet + Transactions + Chart) */}
+          {/* Left (2 columns) */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Wallet Card */}
-           <div className="p-6 bg-white rounded-2xl shadow-sm border">
-         <Wallet />
+            {/* Big card placeholder */}
+            <div className="p-6 bg-white rounded-2xl shadow-sm border min-h-[200px]">
+              Big card placeholder
             </div>
 
-            {/* Transactions Card */}
-            <div className="p-6 bg-white rounded-2xl shadow-sm border">
-              <h2 className="text-slate-500 text-sm mb-2">Recent Transactions</h2>
-              <ul className="divide-y divide-slate-100 text-sm">
-                <li className="flex justify-between py-2">
-                  <span>Shopping</span> <span>R$300</span>
-                </li>
-                <li className="flex justify-between py-2">
-                  <span>Service</span> <span>R$593</span>
-                </li>
-                <li className="flex justify-between py-2">
-                  <span>Rent</span> <span>R$3,030.98</span>
-                </li>
-              </ul>
+            {/* Transactions list placeholder */}
+            <div className="p-6 bg-white rounded-2xl shadow-sm border min-h-[260px]">
+              Transactions placeholder
             </div>
 
-            {/* Chart Placeholder */}
+            {/* Chart placeholder */}
             <div className="p-6 bg-white rounded-2xl shadow-sm border min-h-[200px] flex items-center justify-center">
               <p className="text-slate-400">📈 Monthly Earnings Chart</p>
             </div>
           </div>
 
-          {/* Right (Summaries) */}
+          {/* Right column */}
           <div className="space-y-6">
+            <Wallet />
+
             <div className="p-6 bg-white rounded-2xl shadow-sm border">
               <h2 className="text-slate-600 text-sm">Payable Accounts</h2>
               <p className="text-xs text-slate-400 mb-3">
                 Keep your accounts up to date to avoid issues.
               </p>
               <div className="w-full bg-slate-100 rounded-full h-2 mb-1">
-                <div className="bg-indigo-500 h-2 rounded-full w-5/6"></div>
+                <div className="bg-indigo-500 h-2 rounded-full w-5/6" />
               </div>
               <p className="text-xs text-right text-slate-500">14 of 16 paid</p>
             </div>
@@ -116,12 +108,22 @@ export default function Dashboard() {
   );
 }
 
-function NavItem({ icon, label, active = false }: { icon: string; label: string; active?: boolean }) {
+function NavItem({
+  icon,
+  label,
+  active = false,
+}: {
+  icon: string;
+  label: string;
+  active?: boolean;
+}) {
   return (
     <a
       href="#"
       className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm ${
-        active ? "bg-indigo-50 text-indigo-600 font-medium" : "text-slate-600 hover:bg-slate-50"
+        active
+          ? "bg-indigo-50 text-indigo-600 font-medium"
+          : "text-slate-600 hover:bg-slate-50"
       }`}
     >
       <span>{icon}</span>

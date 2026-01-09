@@ -23,7 +23,7 @@ export function Wallet() {
 
   if (!wallet) {
     return (
-      <Card className="w-full">
+      <Card className="rounded-3xl">
         <CardHeader>
           <CardTitle>Wallet</CardTitle>
           <CardDescription>Loading your balance…</CardDescription>
@@ -35,7 +35,7 @@ export function Wallet() {
   const balanceNumber = Number(wallet.balance);
 
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
         <CardTitle>Wallet</CardTitle>
         <CardDescription>Total money you have</CardDescription>

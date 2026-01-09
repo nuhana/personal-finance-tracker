@@ -5,15 +5,10 @@ export async function GET() {
   try {
     const userId = "cmi5zz74k00007q4skczcm7ad";
 
-    console.log("🔵 DATABASE_URL:", process.env.DATABASE_URL);
-    console.log("🟡 Searching for userId:", userId);
-
     const account = await prisma.account.findFirst({
       where: { userId },
       select: { id: true, userId: true, name: true, balance: true },
     });
-
-    console.log("🟢 Account found:", account);
 
     if (!account) {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
