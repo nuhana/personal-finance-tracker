@@ -1,20 +1,21 @@
+import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const userId = "cmi5zz74k00007q4skczcm7ad";
+    const userId = await getCurrentUserId();
 
-    const account = await prisma.account.findFirst({
+    const wallet = await prisma.account.findFirst({
       where: { userId },
       select: { id: true, userId: true, name: true, balance: true },
     });
 
-    if (!account) {
+    if (!wallet) {
       return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
     }
 
-    return NextResponse.json(account);
+    return NextResponse.json(wallet);
   } catch (err) {
     console.error("❌ SERVER ERROR in /api/wallet:", err);
     return NextResponse.json(

@@ -1,12 +1,16 @@
 import { prisma } from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-
-
-////TODO get the transactions for the logged in user
+import { getCurrentUserId } from "@/lib/current-user";
 
 export async function GET() {
   try {
-    const userId = "cmi5zz74k00007q4skczcm7ad";
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const transactions = await prisma.transaction.findMany({
       where: { userId },
@@ -27,21 +31,33 @@ export async function GET() {
   }
 }
 
-
-
 export async function POST(req: Request) {
-  const body = await req.json();
+  try {
+    const userId = await getCurrentUserId();
+    const body = await req.json();
 
-  const tx = await prisma.transaction.create({
-    data: {
-      userId: body.userId,
-      accountId: body.accountId,
-      amount: body.amount,
-      date: new Date(body.date),
-      note: body.note,
-      categoryId: body.categoryId,
-    },
-  });
+    const tx = await prisma.transaction.create({
+      data: {
+        userId,
+        accountId: body.accountId,
+        categoryId: body.categoryId ?? null,
+        amount: body.amount,
+        date: new Date(body.date),
+        note: body.note ?? null,
+      },
+      include: {
+        category: true,
+        account: true,
+      },
+    });
 
-  return NextResponse.json(tx);
+    return NextResponse.json(tx, { status: 201 });
+  } catch (error) {
+    console.error("❌ Error creating transaction:", error);
+
+    return NextResponse.json(
+      { error: "Failed to create transaction" },
+      { status: 500 }
+    );
+  }
 }

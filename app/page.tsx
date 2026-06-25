@@ -1,3 +1,4 @@
+import { TransactionsCard } from "@/components/Transactions/page";
 import { Wallet } from "@/components/Wallet/page";
 
 export default function Dashboard() {
@@ -52,7 +53,6 @@ export default function Dashboard() {
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left (2 columns) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Big card placeholder */}
             <div className="p-6 bg-white rounded-2xl shadow-sm border min-h-[200px]">
@@ -60,9 +60,7 @@ export default function Dashboard() {
             </div>
 
             {/* Transactions list placeholder */}
-            <div className="p-6 bg-white rounded-2xl shadow-sm border min-h-[260px]">
-              Transactions placeholder
-            </div>
+            <TransactionsCard />
 
             {/* Chart placeholder */}
             <div className="p-6 bg-white rounded-2xl shadow-sm border min-h-[200px] flex items-center justify-center">
