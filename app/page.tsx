@@ -1,7 +1,9 @@
+import { AddTransactionDialog } from "@/components/AddTransactionForm";
 import { TransactionsCard } from "@/components/Transactions/page";
 import { Wallet } from "@/components/Wallet/page";
 
 export default function Dashboard() {
+  const accountId = "YOUR_ACCOUNT_ID_FROM_PRISMA_STUDIO";
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Sidebar */}
@@ -59,8 +61,14 @@ export default function Dashboard() {
               Big card placeholder
             </div>
 
-            {/* Transactions list placeholder */}
-            <TransactionsCard />
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-slate-700 font-semibold">Transactions</h2>
+                <AddTransactionDialog accountId={accountId} />
+              </div>
+
+              <TransactionsCard />
+            </div>
 
             {/* Chart placeholder */}
             <div className="p-6 bg-white rounded-2xl shadow-sm border min-h-[200px] flex items-center justify-center">

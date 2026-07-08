@@ -2,16 +2,31 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTransaction } from "@/lib/api/transactions";
+import {
+  createTransaction,
+  type TransactionType,
+} from "@/lib/api/transactions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 type Props = {
   accountId: string;
 };
 
-export function AddTransactionForm({ accountId }: Props) {
+export function AddTransactionDialog({ accountId }: Props) {
   const queryClient = useQueryClient();
 
+  const [open, setOpen] = useState(false);
+  const [type, setType] = useState<TransactionType>("EXPENSE");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
 
@@ -23,6 +38,8 @@ export function AddTransactionForm({ accountId }: Props) {
 
       setAmount("");
       setNote("");
+      setType("EXPENSE");
+      setOpen(false);
     },
   });
 
@@ -31,6 +48,7 @@ export function AddTransactionForm({ accountId }: Props) {
 
     mutation.mutate({
       accountId,
+      type,
       amount: Number(amount),
       date: new Date().toISOString(),
       note,
@@ -39,28 +57,83 @@ export function AddTransactionForm({ accountId }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <input
-        className="w-full rounded-xl border px-3 py-2 text-sm"
-        placeholder="Amount e.g. -25 or 1000"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-      />
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger>
+        <Button size="sm">+ Add Transaction</Button>
+      </DialogTrigger>
 
-      <input
-        className="w-full rounded-xl border px-3 py-2 text-sm"
-        placeholder="Note e.g. Groceries"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-      />
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Transaction</DialogTitle>
+          <DialogDescription>
+            Add income or expense to your wallet.
+          </DialogDescription>
+        </DialogHeader>
 
-      <Button type="submit" size="sm" disabled={mutation.isPending}>
-        {mutation.isPending ? "Adding..." : "Add transaction"}
-      </Button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Type</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={type === "EXPENSE" ? "default" : "outline"}
+                onClick={() => setType("EXPENSE")}
+              >
+                Expense
+              </Button>
 
-      {mutation.isError && (
-        <p className="text-xs text-red-500">Failed to add transaction.</p>
-      )}
-    </form>
+              <Button
+                type="button"
+                variant={type === "INCOME" ? "default" : "outline"}
+                onClick={() => setType("INCOME")}
+              >
+                Income
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <Input
+              id="amount"
+              placeholder="250.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="note">Note</Label>
+            <Input
+              id="note"
+              placeholder="Groceries, salary, rent..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </div>
+
+          {mutation.isError && (
+            <p className="text-xs text-red-500">
+              Failed to create transaction.
+            </p>
+          )}
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

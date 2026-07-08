@@ -1,20 +1,20 @@
+export type TransactionType = "INCOME" | "EXPENSE";
+
 export type TransactionDto = {
   id: string;
   userId: string;
   accountId: string;
   categoryId: string | null;
-  amount: string; // Prisma Decimal becomes string in JSON
+  amount: string;
   date: string;
   note: string | null;
   createdAt: string;
-
   category: {
     id: string;
     name: string;
     type: "INCOME" | "EXPENSE";
     color: string | null;
   } | null;
-
   account: {
     id: string;
     name: string;
@@ -25,16 +25,15 @@ export type TransactionDto = {
 
 export type CreateTransactionInput = {
   accountId: string;
-  categoryId?: string | null;
   amount: number;
+  type: TransactionType;
   date: string;
   note?: string;
+  categoryId?: string | null;
 };
 
 export async function getTransactions(): Promise<TransactionDto[]> {
-  const res = await fetch("/api/transactions", {
-    cache: "no-store",
-  });
+  const res = await fetch("/api/transactions", { cache: "no-store" });
 
   if (!res.ok) {
     throw new Error("Failed to load transactions");
