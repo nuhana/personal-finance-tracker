@@ -6,6 +6,13 @@ The application allows users to manage their personal finances by tracking walle
 
 ---
 
+## Screenshots
+
+<img width="1876" height="872" alt="Screenshot 2026-07-14 132034" src="https://github.com/user-attachments/assets/f5c13067-f741-46a6-8e09-8d340ac1d532" />
+
+<img width="1873" height="858" alt="Screenshot 2026-07-14 132054" src="https://github.com/user-attachments/assets/c2bf4ace-adde-4d77-a5f7-57e36139604f" />
+
+
 ## Tech Stack
 
 ### Frontend
