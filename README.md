@@ -1,36 +1,160 @@
-# Personal Finance Tracker (Full‑Stack)
+# Personal Finance Tracker
 
-A clean, modern finance tracker built with **Next.js + TypeScript + Prisma + Tailwind**.
-Track expenses, income, accounts, categories, and budgets with a dashboard.
+A modern full-stack personal finance tracker built to demonstrate production-ready React and Next.js development.
 
-## Stack
-- Next.js (App Router), React, TypeScript, TailwindCSS
-- PostgreSQL + Prisma ORM
-- NextAuth (auth)
-- Recharts (charts)
+The application allows users to manage their personal finances by tracking wallet balance, income, expenses, budgets and spending analytics through a clean dashboard interface.
 
-## Quick Start
-1) Install deps
+---
+
+## Screenshots
+
+<img width="1876" height="872" alt="Screenshot 2026-07-14 132034" src="https://github.com/user-attachments/assets/f5c13067-f741-46a6-8e09-8d340ac1d532" />
+
+<img width="1873" height="858" alt="Screenshot 2026-07-14 132054" src="https://github.com/user-attachments/assets/c2bf4ace-adde-4d77-a5f7-57e36139604f" />
+
+
+## Tech Stack
+
+### Frontend
+- Next.js 14 (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- TanStack React Query
+- Recharts
+
+### Backend
+- Next.js API Routes (REST)
+- Prisma ORM
+- PostgreSQL
+
+### Authentication
+- NextAuth (planned)
+
+---
+
+## Features
+
+### Implemented
+
+- Wallet dashboard
+- Transactions API
+- Wallet API
+- PostgreSQL database
+- Prisma ORM
+- REST API architecture
+- React Query data fetching
+- Responsive dashboard layout
+- Transaction list
+- Wallet balance
+
+### In Progress
+
+- Add Transaction dialog
+- Income & Expense tracking
+- Categories
+- Budgets
+- Analytics charts
+
+### Planned
+
+- Authentication with NextAuth
+- Recurring transactions
+- Search & filtering
+- User settings
+- Dark mode
+
+---
+
+## Project Structure
+
+```
+app/
+├── api/
+│   ├── wallet
+│   └── transactions
+│
+components/
+├── Wallet
+├── Transactions
+├── ui
+│
+lib/
+├── api
+├── prisma.ts
+└── current-user.ts
+
+prisma/
+└── schema.prisma
+```
+
+---
+
+## Getting Started
+
+Install dependencies
+
 ```bash
 npm install
 ```
-2) Configure env
+
+Configure environment variables
+
 ```bash
 cp .env.example .env
-# Update DATABASE_URL if needed
 ```
-3) Setup DB
+
+Run database migrations
+
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev
 ```
-4) Run the app
+
+Start the development server
+
 ```bash
 npm run dev
 ```
-Open http://localhost:3000
 
-## Next Steps
-- Implement API route handlers using Prisma (`lib/prisma.ts`).
-- Build Transactions CRUD UI with forms and a table.
-- Create analytics endpoint `/api/analytics/summary` and connect Recharts.
-- Add NextAuth providers and protect routes.
+Open:
+
+```
+http://localhost:3000
+```
+
+---
+
+## Architecture
+
+Frontend Components
+
+↓
+
+React Query
+
+↓
+
+REST API (`/api/...`)
+
+↓
+
+Prisma ORM
+
+↓
+
+PostgreSQL
+
+---
+
+## Goals
+
+This project is being built as a production-style portfolio application focusing on:
+
+- Clean architecture
+- Reusable components
+- Type safety
+- Modern React patterns
+- Scalable backend design
+- Full-stack development with Next.js
+
