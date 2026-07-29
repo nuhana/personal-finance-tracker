@@ -1,5 +1,6 @@
 import { getCurrentUserId } from "@/lib/current-user";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -30,11 +31,32 @@ export async function POST(req: Request) {
     const userId = await getCurrentUserId();
     const body = await req.json();
 
+    const account = await prisma.account.findFirst({
+      where: {
+        userId,
+      },
+    });
+
+    if (!account) {
+      return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
+    }
+
     const rawAmount = Number(body.amount);
 
-    if (!body.accountId || Number.isNaN(rawAmount) || rawAmount <= 0) {
+    const isValidType = body.type === "EXPENSE" || body.type === "INCOME";
+
+    if (!isValidType || Number.isNaN(rawAmount) || rawAmount <= 0) {
       return NextResponse.json(
         { error: "Invalid transaction data" },
+        { status: 400 }
+      );
+    }
+
+    const transactionDate = body.date ? new Date(body.date) : new Date();
+
+    if (Number.isNaN(transactionDate.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid transaction date" },
         { status: 400 }
       );
     }
@@ -42,39 +64,42 @@ export async function POST(req: Request) {
     const signedAmount =
       body.type === "EXPENSE" ? -Math.abs(rawAmount) : Math.abs(rawAmount);
 
-    const result = await prisma.$transaction(async (tx) => {
-      const transaction = await tx.transaction.create({
-        data: {
-          userId,
-          accountId: body.accountId,
-          categoryId: body.categoryId ?? null,
-          amount: signedAmount,
-          date: new Date(body.date),
-          note: body.note ?? null,
-        },
-        include: {
-          category: true,
-          account: true,
-        },
-      });
-
-      await tx.account.update({
-        where: {
-          id: body.accountId,
-        },
-        data: {
-          balance: {
-            increment: signedAmount,
+    const result = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const transaction = await tx.transaction.create({
+          data: {
+            userId,
+            accountId: account.id,
+            categoryId: body.categoryId ?? null,
+            amount: signedAmount,
+            date: transactionDate,
+            note: body.note?.trim() || null,
           },
-        },
-      });
+          include: {
+            category: true,
+            account: true,
+          },
+        });
 
-      return transaction;
-    });
+        await tx.account.update({
+          where: {
+            id: account.id,
+          },
+          data: {
+            balance: {
+              increment: signedAmount,
+            },
+          },
+        });
+
+        return transaction;
+      }
+    );
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error("❌ Error creating transaction:", error);
+
     return NextResponse.json(
       { error: "Failed to create transaction" },
       { status: 500 }

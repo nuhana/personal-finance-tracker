@@ -24,7 +24,6 @@ export type TransactionDto = {
 };
 
 export type CreateTransactionInput = {
-  accountId: string;
   amount: number;
   type: TransactionType;
   date: string;

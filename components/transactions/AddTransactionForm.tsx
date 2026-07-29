@@ -18,11 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-type Props = {
-  accountId: string;
-};
-
-export function AddTransactionDialog({ accountId }: Props) {
+export function AddTransactionDialog() {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
@@ -47,7 +43,6 @@ export function AddTransactionDialog({ accountId }: Props) {
     e.preventDefault();
 
     mutation.mutate({
-      accountId,
       type,
       amount: Number(amount),
       date: new Date().toISOString(),
@@ -58,9 +53,7 @@ export function AddTransactionDialog({ accountId }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button size="sm">+ Add Transaction</Button>
-      </DialogTrigger>
+      <DialogTrigger render={<Button size="sm">+ Add Transaction</Button>} />
 
       <DialogContent>
         <DialogHeader>

@@ -1,44 +1,13 @@
-import { AddTransactionDialog } from "@/components/AddTransactionForm";
-import { TransactionsCard } from "@/components/Transactions/page";
-import { Wallet } from "@/components/Wallet/page";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { AddTransactionDialog } from "@/components/transactions/AddTransactionForm";
+import { TransactionsCard } from "@/components/transactions/TransactionsCard";
+import { Wallet } from "@/components/wallet/page";
 
 export default function Dashboard() {
-  const accountId = "YOUR_ACCOUNT_ID_FROM_PRISMA_STUDIO";
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-sm border-r p-4 flex flex-col justify-between rounded-r-3xl">
-        <div>
-          {/* Profile */}
-          <div className="flex items-center space-x-3 p-3 mb-6">
-            <img
-              src="/avatar.png"
-              alt="User"
-              className="w-12 h-12 rounded-full"
-            />
-            <div>
-              <h3 className="font-semibold text-slate-800">Gadiel Machado</h3>
-              <p className="text-xs text-slate-500">Designer</p>
-            </div>
-          </div>
-
-          {/* Nav Links */}
-          <nav className="space-y-2">
-            <NavItem icon="📊" label="Dashboard" active />
-            <NavItem icon="💰" label="Wallet" />
-            <NavItem icon="📑" label="Transactions" />
-            <NavItem icon="📈" label="Analytics" />
-            <NavItem icon="🔍" label="Search" />
-          </nav>
-        </div>
-
-        {/* Bottom Menu */}
-        <div className="space-y-2 border-t border-slate-100 pt-4">
-          <NavItem icon="⚙️" label="Settings" />
-          <NavItem icon="❓" label="Help" />
-          <NavItem icon="🚪" label="Log Out" />
-        </div>
-      </aside>
+      <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1 p-8 space-y-6">
@@ -64,10 +33,10 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-slate-700 font-semibold">Transactions</h2>
-                <AddTransactionDialog accountId={accountId} />
+                <AddTransactionDialog />
               </div>
 
-              <TransactionsCard />
+              <TransactionsCard limit={5} />
             </div>
 
             {/* Chart placeholder */}
@@ -111,29 +80,5 @@ export default function Dashboard() {
         </div>
       </main>
     </div>
-  );
-}
-
-function NavItem({
-  icon,
-  label,
-  active = false,
-}: {
-  icon: string;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <a
-      href="#"
-      className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-sm ${
-        active
-          ? "bg-indigo-50 text-indigo-600 font-medium"
-          : "text-slate-600 hover:bg-slate-50"
-      }`}
-    >
-      <span>{icon}</span>
-      <span>{label}</span>
-    </a>
   );
 }
