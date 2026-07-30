@@ -12,7 +12,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 
-export function Wallet() {
+export function WalletCard() {
   const {
     data: wallet,
     isLoading,
