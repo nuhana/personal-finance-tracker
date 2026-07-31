@@ -1,3 +1,4 @@
+import { MonthlyCashFlowChart } from "@/components/analytics/MonthlyCashFlowChart";
 import { AddTransactionDialog } from "@/components/transactions/AddTransactionForm";
 import { TransactionsCard } from "@/components/transactions/TransactionsCard";
 import { WalletCard } from "@/components/wallet/WalletCard";
@@ -33,9 +34,7 @@ export default function DashboardPage() {
             <TransactionsCard limit={5} />
           </div>
 
-          <div className="flex min-h-[200px] items-center justify-center rounded-2xl border bg-white p-6 shadow-sm">
-            <p className="text-slate-400">📈 Monthly Earnings Chart</p>
-          </div>
+          <MonthlyCashFlowChart />
         </div>
 
         <div className="space-y-6">
