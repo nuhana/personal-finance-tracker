@@ -9,7 +9,6 @@ export async function GET() {
     select: {
       id: true,
       name: true,
-      currency: true,
       balance: true,
     },
   });

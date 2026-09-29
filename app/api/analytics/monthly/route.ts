@@ -23,13 +23,8 @@ export async function GET() {
       },
     });
 
-    type TransactionAnalytics = {
-      amount: number;
-      date: Date;
-    };
-
-    const monthlyData = (transactions as TransactionAnalytics[]).reduce(
-      (result, transaction) => {
+    const monthlyData = transactions.reduce(
+      (result: Record<string, MonthlyAnalytics>, transaction) => {
         const monthKey = transaction.date.toISOString().slice(0, 7);
 
         const monthLabel = transaction.date.toLocaleDateString("en-US", {
@@ -45,7 +40,7 @@ export async function GET() {
           };
         }
 
-        const amount = Number(transaction.amount);
+        const amount = transaction.amount.toNumber();
 
         if (amount >= 0) {
           result[monthKey].income += amount;
@@ -55,14 +50,14 @@ export async function GET() {
 
         return result;
       },
-      {} as Record<string, MonthlyAnalytics>
+      {}
     );
 
     const analytics = Object.values(monthlyData);
 
     return NextResponse.json(analytics);
   } catch (error) {
-    console.error("❌ SERVER ERROR in /api/analytics/monthly:", error);
+    console.error("SERVER ERROR in /api/analytics/monthly:", error);
 
     return NextResponse.json(
       { error: "Internal server error" },
