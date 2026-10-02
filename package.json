@@ -34,6 +34,7 @@
     "@types/react": "^18.3.6",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.21",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.13.0",
     "postcss": "^8.5.6",
     "prettier": "^3.7.4",
