@@ -29,6 +29,9 @@ The application allows users to manage their personal finances by tracking walle
 - Prisma ORM
 - PostgreSQL
 
+### AI
+- Google Gemini (`@google/genai`)
+
 ### Authentication
 - NextAuth (planned)
 
@@ -48,14 +51,15 @@ The application allows users to manage their personal finances by tracking walle
 - Responsive dashboard layout
 - Transaction list
 - Wallet balance
+- Add Transaction dialog (income & expense, wallet balance updated automatically)
+- Monthly cash flow chart on the dashboard
+- AI category suggestions: a "Suggest" button in the Add Transaction dialog asks Gemini to pick one of your categories from the transaction note
 
 ### In Progress
 
-- Add Transaction dialog
-- Income & Expense tracking
-- Categories
+- Categories (demo categories are seeded; the categories API and page are not wired up yet)
 - Budgets
-- Analytics charts
+- Editing and deleting transactions
 
 ### Planned
 
@@ -71,23 +75,55 @@ The application allows users to manage their personal finances by tracking walle
 
 ```
 app/
-├── api/
+├── (dashboard)/        # pages sharing the sidebar layout
+│   ├── dashboard
 │   ├── wallet
-│   └── transactions
-│
+│   ├── transactions
+│   ├── categories
+│   ├── budgets
+│   └── settings
+└── api/
+    ├── wallet
+    ├── transactions
+    ├── analytics/monthly
+    ├── ai/categorize
+    ├── accounts
+    ├── categories
+    └── budgets
+
 components/
-├── Wallet
-├── Transactions
-├── ui
-│
+├── analytics
+├── dashboard
+├── layout
+├── providers
+├── transactions
+├── wallet
+└── ui                  # shadcn/ui components
+
 lib/
-├── api
+├── api                 # client-side fetch helpers and DTO types
 ├── prisma.ts
 └── current-user.ts
 
 prisma/
-└── schema.prisma
+├── schema.prisma
+└── seed.ts
 ```
+
+---
+
+## API
+
+| Method | Route | Description |
+| --- | --- | --- |
+| GET | `/api/wallet` | The current user's wallet and balance |
+| GET | `/api/transactions` | All transactions, newest first |
+| POST | `/api/transactions` | Create a transaction `{ type, amount, date?, note?, categoryId? }` and update the wallet balance |
+| GET | `/api/analytics/monthly` | Monthly income and expense totals |
+| POST | `/api/ai/categorize` | Suggest a category for `{ note, type? }`; returns `{ categoryId, categoryName }` |
+| GET | `/api/accounts` | The current user's accounts |
+
+`/api/categories`, `/api/budgets` and `PATCH`/`DELETE /api/transactions/[id]` currently return placeholder responses.
 
 ---
 
@@ -99,10 +135,13 @@ Install dependencies
 npm install
 ```
 
-Configure environment variables
+Configure environment variables in a `.env` file
 
 ```bash
-cp .env.example .env
+DATABASE_URL="postgresql://user:password@localhost:5432/finance_tracker"
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="any-random-string"
+GEMINI_API_KEY="your-gemini-api-key"   # from https://aistudio.google.com/apikey
 ```
 
 Run database migrations
@@ -110,6 +149,16 @@ Run database migrations
 ```bash
 npx prisma migrate dev
 ```
+
+Seed the database (creates the demo user, a "Main Wallet" account and demo categories)
+
+```bash
+npx prisma db seed
+```
+
+> Authentication is not implemented yet; the app always runs as the seeded demo user.
+>
+> Gemini's free tier allows 20 requests per day, so AI suggestions only run when you click "Suggest".
 
 Start the development server
 
