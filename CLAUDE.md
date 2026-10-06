@@ -28,6 +28,7 @@ client component → React Query (`useQuery`/`useMutation`) → fetch helper in 
 - **Pages** under `app/(dashboard)/` share the sidebar layout; `/` redirects to `/dashboard`. Pages are thin and compose client components from `components/<feature>/`.
 - **`lib/api/*.ts`** holds the client-side fetch functions and hand-written DTO types (`WalletDto`, `TransactionDto`, …). Prisma `Decimal` fields arrive as **strings** in JSON (e.g. `balance`, `amount`), so DTOs type them as `string`. Keep DTOs in sync when changing route responses.
 - **React Query keys** in use: `["wallet"]`, `["transactions"]`, `["analytics", "monthly"]`. Mutations must invalidate every key whose data they affect (e.g. adding a transaction invalidates `transactions` and `wallet`; analytics is currently not invalidated).
+- **Route caching:** a `GET()` handler that doesn't read the request is rendered statically at build time in Next.js 14, so production serves a frozen response. Database-backed GET routes must `export const dynamic = "force-dynamic";`.
 - **`QueryProvider`** (`components/providers/query-provider.tsx`) wraps the app in the root layout.
 
 ### Auth / current user
