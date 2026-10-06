@@ -2,10 +2,12 @@ import type { TransactionType } from "@/lib/api/transactions";
 
 export type CategorizeInput = {
   note: string;
+  // Omit to let the AI infer income/expense from the note.
   type?: TransactionType;
 };
 
 export type CategorizeResultDto = {
+  type: TransactionType;
   categoryId: string | null;
   categoryName: string | null;
 };

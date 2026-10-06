@@ -142,7 +142,11 @@ DATABASE_URL="postgresql://user:password@localhost:5432/finance_tracker"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="any-random-string"
 GEMINI_API_KEY="your-gemini-api-key"   # from https://aistudio.google.com/apikey
+GROQ_API_KEY="your-groq-api-key"       # optional fallback, from https://console.groq.com/keys
+# AI_PROVIDERS="gemini,groq"           # optional: order providers are tried in
 ```
+
+AI suggestions try each configured provider in order and fall back to the next one when a provider is rate limited or fails.
 
 Run database migrations
 

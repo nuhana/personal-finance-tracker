@@ -27,6 +27,8 @@ export function AddTransactionDialog() {
 
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<TransactionType>("EXPENSE");
+  // Once the user clicks Income/Expense, the AI must not override it.
+  const [typeChosen, setTypeChosen] = useState(false);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [category, setCategory] = useState<CategorizeResultDto | null>(null);
@@ -50,6 +52,7 @@ export function AddTransactionDialog() {
       setAmount("");
       setNote("");
       setType("EXPENSE");
+      setTypeChosen(false);
       resetSuggestion();
       setOpen(false);
     },
@@ -89,6 +92,7 @@ export function AddTransactionDialog() {
                 onClick={() => {
                   if (type !== "EXPENSE") resetSuggestion();
                   setType("EXPENSE");
+                  setTypeChosen(true);
                 }}
               >
                 Expense
@@ -100,6 +104,7 @@ export function AddTransactionDialog() {
                 onClick={() => {
                   if (type !== "INCOME") resetSuggestion();
                   setType("INCOME");
+                  setTypeChosen(true);
                 }}
               >
                 Income
@@ -136,10 +141,18 @@ export function AddTransactionDialog() {
                 disabled={!note.trim() || suggestion.isPending}
                 onClick={() =>
                   suggestion.mutate(
-                    { note: note.trim(), type },
+                    {
+                      note: note.trim(),
+                      ...(typeChosen ? { type } : {}),
+                    },
                     // Passed here, not to useMutation, so it is skipped if
                     // resetSuggestion() ran while the request was in flight.
-                    { onSuccess: (result) => setCategory(result) }
+                    {
+                      onSuccess: (result) => {
+                        setType(result.type);
+                        setCategory(result);
+                      },
+                    }
                   )
                 }
               >
