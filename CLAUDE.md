@@ -15,7 +15,7 @@ npx prisma db seed       # runs prisma/seed.ts via tsx (demo user + "Main Wallet
 npx prisma studio        # browse the database
 ```
 
-There is no test suite. Environment variables (`.env`): `DATABASE_URL` (PostgreSQL), `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, plus AI keys `GEMINI_API_KEY` / `GROQ_API_KEY` (at least one) and optional `AI_PROVIDERS` (fallback order, default `gemini,groq`). AI calls go through `generateJson()` in `lib/ai/index.ts`, which tries each configured provider in `lib/ai/providers/` in order; routes should not call an AI SDK directly. Deployed on Vercel (`.vercel/`). Production env vars live in `.env.production.local` (git-ignored); `dotenv-cli` is installed to run commands against it, e.g. `npx dotenv -e .env.production.local -- prisma migrate deploy`. The README mentions `.env.example`, but that file does not exist.
+There is no test suite. Environment variables (`.env`): `DATABASE_URL` (PostgreSQL), `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, plus AI keys `GEMINI_API_KEY` / `GROQ_API_KEY` (at least one) and optional `AI_PROVIDERS` (fallback order, default `groq,gemini`). AI calls go through `generateJson()` in `lib/ai/index.ts`, which tries each configured provider in `lib/ai/providers/` in order; routes should not call an AI SDK directly. Deployed on Vercel (`.vercel/`). Production env vars live in `.env.production.local` (git-ignored); `dotenv-cli` is installed to run commands against it, e.g. `npx dotenv -e .env.production.local -- prisma migrate deploy`. The README mentions `.env.example`, but that file does not exist.
 
 Lint caveat: ESLint 9 is installed but config lives in the legacy-format `.eslint.json` (no `eslint.config.*` flat config), so `npm run lint` may not pick it up.
 

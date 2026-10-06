@@ -11,9 +11,10 @@ const providers: Record<string, AiProvider> = {
   groq: groqProvider,
 };
 
-// Tried in this order; override with e.g. AI_PROVIDERS="groq,gemini".
+// Tried in this order: Groq first because it answers much faster, Gemini as
+// the fallback. Override with e.g. AI_PROVIDERS="gemini,groq".
 function providerOrder(): AiProvider[] {
-  const names = (process.env.AI_PROVIDERS ?? "gemini,groq")
+  const names = (process.env.AI_PROVIDERS ?? "groq,gemini")
     .split(",")
     .map((name) => name.trim())
     .filter(Boolean);
