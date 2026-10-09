@@ -27,7 +27,8 @@ client component → React Query (`useQuery`/`useMutation`) → fetch helper in 
 
 - **Pages** under `app/(dashboard)/` share the sidebar layout; `/` redirects to `/dashboard`. Pages are thin and compose client components from `components/<feature>/`.
 - **`lib/api/*.ts`** holds the client-side fetch functions and hand-written DTO types (`WalletDto`, `TransactionDto`, …). Prisma `Decimal` fields arrive as **strings** in JSON (e.g. `balance`, `amount`), so DTOs type them as `string`. Keep DTOs in sync when changing route responses.
-- **React Query keys** in use: `["wallet"]`, `["transactions"]`, `["analytics", "monthly"]`. Mutations must invalidate every key whose data they affect (e.g. adding a transaction invalidates `transactions` and `wallet`; analytics is currently not invalidated).
+- **DTOs can reuse server types** with `import type` (e.g. `SpendingInsightsDto` in `lib/api/ai.ts` reuses `SpendingStats` from `lib/insights.ts`). Use `import type`, not `import`, because those server modules import Prisma and the import must be erased from the client bundle. Only do this when the server type is already JSON-shaped (numbers/strings, no `Decimal` or `Date`).
+- **React Query keys** in use: `["wallet"]`, `["transactions"]`, `["analytics", "monthly"]`. Mutations must invalidate every key whose data they affect (e.g. adding a transaction invalidates `transactions` and `wallet`; analytics is currently not invalidated). AI features (`/api/ai/categorize`, `/api/ai/insights`) are called through `useMutation` on a button click, not `useQuery`, to stay within AI rate limits.
 - **Route caching:** a `GET()` handler that doesn't read the request is rendered statically at build time in Next.js 14, so production serves a frozen response. Database-backed GET routes must `export const dynamic = "force-dynamic";`.
 - **`QueryProvider`** (`components/providers/query-provider.tsx`) wraps the app in the root layout.
 
@@ -41,6 +42,12 @@ Authentication is not implemented. `getCurrentUserId()` in `lib/current-user.ts`
 - The "wallet" is simply the user's first `Account` (`findFirst({ where: { userId } })`); `Account.balance` is the wallet balance.
 - `Transaction.amount` is **signed**: income positive, expense negative. There is no type column on `Transaction`; income/expense is derived from the sign (see `app/api/analytics/monthly/route.ts`). `POST /api/transactions` accepts `{ type, amount }`, signs the amount, and creates the transaction **and** increments `Account.balance` inside one `prisma.$transaction`. Any new code that creates, edits, or deletes transactions must keep the balance consistent in the same way.
 - `Budget` is unique per `(userId, categoryId, month, year)`.
+
+### AI spending insights
+
+- `getSpendingStats()` in `lib/insights.ts` computes every figure: month-to-date expenses (UTC months, like `/api/analytics/monthly`) compared with the same elapsed time of last month, capped at last month's end, totals and per-category, with transactions that have no category or an unknown category grouped as "Uncategorized".
+- `POST /api/ai/insights` sends the model only those precomputed facts (category names and amounts, no IDs or notes) and asks it to phrase them. It then drops any summary or insight sentence containing a number that is not in the facts, and replaces a rejected summary with `fallbackSummary()`. Keep this check if you change the prompt; the model must never be the source of a number.
+- Shown by `components/dashboard/SpendingInsightsCard.tsx` on the dashboard.
 
 ### Stubbed / in-progress
 

@@ -30,7 +30,7 @@ The application allows users to manage their personal finances by tracking walle
 - PostgreSQL
 
 ### AI
-- Google Gemini (`@google/genai`)
+- Groq and Google Gemini (`@google/genai`), tried in order with automatic fallback
 
 ### Authentication
 - NextAuth (planned)
@@ -53,7 +53,8 @@ The application allows users to manage their personal finances by tracking walle
 - Wallet balance
 - Add Transaction dialog (income & expense, wallet balance updated automatically)
 - Monthly cash flow chart on the dashboard
-- AI category suggestions: a "Suggest" button in the Add Transaction dialog asks Gemini to pick one of your categories from the transaction note
+- AI category suggestions: a "Suggest" button in the Add Transaction dialog asks the AI to pick one of your categories from the transaction note
+- AI spending insights: a dashboard card compares this month's spending so far with the same days of last month, overall and per category, and has the AI summarize the changes
 
 ### In Progress
 
@@ -87,6 +88,7 @@ app/
     ├── transactions
     ├── analytics/monthly
     ├── ai/categorize
+    ├── ai/insights
     ├── accounts
     ├── categories
     └── budgets
@@ -102,6 +104,7 @@ components/
 
 lib/
 ├── api                 # client-side fetch helpers and DTO types
+├── insights.ts         # month-over-month spending stats
 ├── prisma.ts
 └── current-user.ts
 
@@ -121,6 +124,7 @@ prisma/
 | POST | `/api/transactions` | Create a transaction `{ type, amount, date?, note?, categoryId? }` and update the wallet balance |
 | GET | `/api/analytics/monthly` | Monthly income and expense totals |
 | POST | `/api/ai/categorize` | Suggest a category for `{ note, type? }`; returns `{ categoryId, categoryName }` |
+| POST | `/api/ai/insights` | Compare this month's spending so far with the same days of last month; returns `{ summary, insights, stats }` |
 | GET | `/api/accounts` | The current user's accounts |
 
 `/api/categories`, `/api/budgets` and `PATCH`/`DELETE /api/transactions/[id]` currently return placeholder responses.
@@ -162,7 +166,7 @@ npx prisma db seed
 
 > Authentication is not implemented yet; the app always runs as the seeded demo user.
 >
-> Gemini's free tier allows 20 requests per day, so AI suggestions only run when you click "Suggest".
+> Gemini's free tier allows 20 requests per day, so AI features only run when you click "Suggest" or "Generate insights".
 
 Start the development server
 
