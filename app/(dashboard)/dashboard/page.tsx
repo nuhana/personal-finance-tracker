@@ -1,6 +1,7 @@
 import { MonthlyCashFlowChart } from "@/components/analytics/MonthlyCashFlowChart";
 import { AddTransactionDialog } from "@/components/transactions/AddTransactionForm";
 import { TransactionsCard } from "@/components/transactions/TransactionsCard";
+import { SpendingInsightsCard } from "@/components/dashboard/SpendingInsightsCard";
 import { WalletCard } from "@/components/wallet/WalletCard";
 
 export default function DashboardPage() {
@@ -40,7 +41,7 @@ export default function DashboardPage() {
         <div className="space-y-6">
           <WalletCard />
 
-          {/* other cards */}
+          <SpendingInsightsCard />
         </div>
       </div>
     </div>
