@@ -10,6 +10,9 @@ import {
   categorizeTransaction,
   type CategorizeResultDto,
 } from "@/lib/api/ai";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,16 +25,46 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+const transactionSchema = z.object({
+  type: z.enum(["INCOME", "EXPENSE"]),
+  // The input gives a string; validate it as text, then convert to a number.
+  amount: z
+    .string()
+    .trim()
+    .min(1, "Amount is required")
+    .transform(Number)
+    .pipe(
+      z
+        .number({ error: "Enter a valid number" })
+        .positive("Amount must be greater than 0")
+    ),
+  note: z.string(),
+});
+
+type TransactionFormInput = z.input<typeof transactionSchema>;
+type TransactionFormValues = z.output<typeof transactionSchema>;
+
+const defaultValues: TransactionFormInput = {
+  type: "EXPENSE",
+  amount: "",
+  note: "",
+};
+
 export function AddTransactionDialog() {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
-  const [type, setType] = useState<TransactionType>("EXPENSE");
   // Once the user clicks Income/Expense, the AI must not override it.
   const [typeChosen, setTypeChosen] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [note, setNote] = useState("");
   const [category, setCategory] = useState<CategorizeResultDto | null>(null);
+
+  const form = useForm<TransactionFormInput, unknown, TransactionFormValues>({
+    resolver: zodResolver(transactionSchema),
+    defaultValues,
+  });
+  const { errors } = form.formState;
+  const type = form.watch("type");
+  const note = form.watch("note");
 
   // Only runs when the user clicks "Suggest", to stay within the AI rate limit.
   const suggestion = useMutation({
@@ -49,25 +82,25 @@ export function AddTransactionDialog() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["wallet"] });
 
-      setAmount("");
-      setNote("");
-      setType("EXPENSE");
+      form.reset(defaultValues);
       setTypeChosen(false);
       resetSuggestion();
       setOpen(false);
     },
   });
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
+  function onSubmit(values: TransactionFormValues) {
     mutation.mutate({
-      type,
-      amount: Number(amount),
+      ...values,
       date: new Date().toISOString(),
-      note,
       categoryId: category?.categoryId ?? null,
     });
+  }
+
+  function chooseType(next: TransactionType) {
+    if (type !== next) resetSuggestion();
+    form.setValue("type", next);
+    setTypeChosen(true);
   }
 
   return (
@@ -82,18 +115,18 @@ export function AddTransactionDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4"
+          noValidate
+        >
           <div className="space-y-2">
             <Label>Type</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
                 variant={type === "EXPENSE" ? "default" : "outline"}
-                onClick={() => {
-                  if (type !== "EXPENSE") resetSuggestion();
-                  setType("EXPENSE");
-                  setTypeChosen(true);
-                }}
+                onClick={() => chooseType("EXPENSE")}
               >
                 Expense
               </Button>
@@ -101,11 +134,7 @@ export function AddTransactionDialog() {
               <Button
                 type="button"
                 variant={type === "INCOME" ? "default" : "outline"}
-                onClick={() => {
-                  if (type !== "INCOME") resetSuggestion();
-                  setType("INCOME");
-                  setTypeChosen(true);
-                }}
+                onClick={() => chooseType("INCOME")}
               >
                 Income
               </Button>
@@ -116,11 +145,14 @@ export function AddTransactionDialog() {
             <Label htmlFor="amount">Amount</Label>
             <Input
               id="amount"
+              inputMode="decimal"
               placeholder="250.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              required
+              aria-invalid={!!errors.amount}
+              {...form.register("amount")}
             />
+            {errors.amount && (
+              <p className="text-xs text-red-500">{errors.amount.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -129,11 +161,7 @@ export function AddTransactionDialog() {
               <Input
                 id="note"
                 placeholder="Groceries, salary, rent..."
-                value={note}
-                onChange={(e) => {
-                  setNote(e.target.value);
-                  resetSuggestion();
-                }}
+                {...form.register("note", { onChange: resetSuggestion })}
               />
               <Button
                 type="button"
@@ -149,7 +177,7 @@ export function AddTransactionDialog() {
                     // resetSuggestion() ran while the request was in flight.
                     {
                       onSuccess: (result) => {
-                        setType(result.type);
+                        form.setValue("type", result.type);
                         setCategory(result);
                       },
                     }
