@@ -11,6 +11,7 @@ import { getCategories } from "@/lib/api/categories";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -154,6 +155,28 @@ export function AddTransactionDialog() {
     if (id) setTypeChosen(true);
   }
 
+  // Only runs on click, to stay within the AI rate limit.
+  function suggestCategory() {
+    suggestion.mutate(
+      {
+        note: note.trim(),
+        ...(typeChosen ? { type } : {}),
+      },
+      // Passed here, not to useMutation, so it is skipped if
+      // suggestion.reset() ran while the request was in flight.
+      {
+        onSuccess: (result) => {
+          form.setValue("type", result.type);
+          // "Nothing fits" must not wipe a category the user picked
+          // themselves.
+          if (result.categoryId || categorySource !== "user") {
+            setCategory(result.categoryId, "ai");
+          }
+        },
+      }
+    );
+  }
+
   function onNoteChange() {
     // A suggestion was made for the old note; a category the user picked
     // doesn't depend on the note, so it stays.
@@ -215,81 +238,81 @@ export function AddTransactionDialog() {
 
           <div className="space-y-2">
             <Label htmlFor="note">Note</Label>
-            <div className="flex gap-2">
-              <Input
-                id="note"
-                placeholder="Groceries, salary, rent..."
-                {...form.register("note", { onChange: onNoteChange })}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={!note.trim() || suggestion.isPending}
-                onClick={() =>
-                  suggestion.mutate(
-                    {
-                      note: note.trim(),
-                      ...(typeChosen ? { type } : {}),
-                    },
-                    // Passed here, not to useMutation, so it is skipped if
-                    // suggestion.reset() ran while the request was in flight.
-                    {
-                      onSuccess: (result) => {
-                        form.setValue("type", result.type);
-                        // "Nothing fits" must not wipe a category the user
-                        // picked themselves.
-                        if (result.categoryId || categorySource !== "user") {
-                          setCategory(result.categoryId, "ai");
-                        }
-                      },
-                    }
-                  )
-                }
-              >
-                {suggestion.isPending ? "Suggesting..." : "Suggest"}
-              </Button>
-            </div>
-
-            {suggestion.isError && (
-              <p className="text-xs text-red-500">{suggestion.error.message}</p>
-            )}
+            <Input
+              id="note"
+              placeholder="Groceries, salary, rent..."
+              {...form.register("note", { onChange: onNoteChange })}
+            />
           </div>
 
           <div className="space-y-2">
             <Label>Category</Label>
-            <Select
-              items={categoryItems}
-              value={categoryId}
-              onValueChange={(value) => chooseCategory(value as string | null)}
-              disabled={categories.isPending || categories.isError}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue
-                  placeholder={
-                    categories.isPending
-                      ? "Loading categories..."
-                      : "No category"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {categoryItems.map((item) => (
-                  <SelectItem key={item.value ?? "none"} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select
+                items={categoryItems}
+                value={categoryId}
+                onValueChange={(value) =>
+                  chooseCategory(value as string | null)
+                }
+                disabled={categories.isPending || categories.isError}
+              >
+                <SelectTrigger className="min-w-0 flex-1">
+                  <SelectValue
+                    placeholder={
+                      categories.isPending
+                        ? "Loading categories..."
+                        : "No category"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryItems.map((item) => (
+                    <SelectItem key={item.value ?? "none"} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!note.trim() || suggestion.isPending}
+                onClick={suggestCategory}
+                title="Let AI pick a category based on your note"
+              >
+                {suggestion.isPending ? (
+                  <Loader2 className="animate-spin" aria-hidden />
+                ) : (
+                  <Sparkles aria-hidden />
+                )}
+                {suggestion.isPending ? "Suggesting..." : "Suggest with AI"}
+              </Button>
+            </div>
+
+            {!note.trim() && !categoryId && (
+              <p className="text-xs text-muted-foreground">
+                Pick a category, or write a note and let AI suggest one.
+              </p>
+            )}
 
             {categorySource === "ai" && (
-              <p className="text-xs text-muted-foreground">
-                Suggested by AI. You can change it.
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Sparkles className="size-3" aria-hidden />
+                Suggested by AI from your note. You can change it.
               </p>
             )}
 
             {suggestion.data && !suggestion.data.categoryId && !categoryId && (
               <p className="text-xs text-muted-foreground">
-                No matching category found.
+                AI couldn&apos;t find a matching category. Pick one yourself.
+              </p>
+            )}
+
+            {suggestion.isError && (
+              <p className="text-xs text-red-500">
+                {suggestion.error.message}. You can still pick a category
+                yourself.
               </p>
             )}
 
