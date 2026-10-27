@@ -28,7 +28,7 @@ client component → React Query (`useQuery`/`useMutation`) → fetch helper in 
 - **Pages** under `app/(dashboard)/` share the sidebar layout; `/` redirects to `/dashboard`. Pages are thin and compose client components from `components/<feature>/`.
 - **`lib/api/*.ts`** holds the client-side fetch functions and hand-written DTO types (`WalletDto`, `TransactionDto`, …). Prisma `Decimal` fields arrive as **strings** in JSON (e.g. `balance`, `amount`), so DTOs type them as `string`. Keep DTOs in sync when changing route responses.
 - **DTOs can reuse server types** with `import type` (e.g. `SpendingInsightsDto` in `lib/api/ai.ts` reuses `SpendingStats` from `lib/insights.ts`). Use `import type`, not `import`, because those server modules import Prisma and the import must be erased from the client bundle. Only do this when the server type is already JSON-shaped (numbers/strings, no `Decimal` or `Date`).
-- **React Query keys** in use: `["wallet"]`, `["transactions"]`, `["analytics", "monthly"]`. Mutations must invalidate every key whose data they affect (e.g. adding a transaction invalidates `transactions` and `wallet`; analytics is currently not invalidated). AI features (`/api/ai/categorize`, `/api/ai/insights`) are called through `useMutation` on a button click, not `useQuery`, to stay within AI rate limits.
+- **React Query keys** in use: `["wallet"]`, `["transactions"]`, `["categories"]`, `["analytics", "monthly"]`. Mutations must invalidate every key whose data they affect (e.g. adding a transaction invalidates `transactions` and `wallet`; analytics is currently not invalidated). AI features (`/api/ai/categorize`, `/api/ai/insights`) are called through `useMutation` on a button click, not `useQuery`, to stay within AI rate limits.
 - **Route caching:** a `GET()` handler that doesn't read the request is rendered statically at build time in Next.js 14, so production serves a frozen response. Database-backed GET routes must `export const dynamic = "force-dynamic";`.
 - **`QueryProvider`** (`components/providers/query-provider.tsx`) wraps the app in the root layout.
 
@@ -51,7 +51,7 @@ Authentication is not implemented. `getCurrentUserId()` in `lib/current-user.ts`
 
 ### Stubbed / in-progress
 
-`app/api/categories`, `app/api/budgets`, and `app/api/transactions/[id]` (PATCH/DELETE) return placeholder responses. The budgets, categories, and settings pages are not yet wired up.
+`POST /api/categories`, `app/api/budgets`, and `app/api/transactions/[id]` (PATCH/DELETE) return placeholder responses. The budgets, categories, and settings pages are not yet wired up.
 
 ## UI conventions
 

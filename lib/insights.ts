@@ -22,7 +22,7 @@ export type SpendingStats = {
 
 const UNCATEGORIZED = "Uncategorized";
 
-function round2(value: number) {
+function roundToCents(value: number) {
   return Math.round(value * 100) / 100;
 }
 
@@ -101,15 +101,15 @@ export async function getSpendingStats(
 
   const categorySpending = Array.from(byName, ([name, t]) => ({
     name,
-    current: round2(t.current),
-    previous: round2(t.previous),
+    current: roundToCents(t.current),
+    previous: roundToCents(t.previous),
     changePercent: percentChange(t.current, t.previous),
   })).sort((a, b) => b.current - a.current || b.previous - a.previous);
 
-  const totalCurrent = round2(
+  const totalCurrent = roundToCents(
     categorySpending.reduce((sum, c) => sum + c.current, 0)
   );
-  const totalPrevious = round2(
+  const totalPrevious = roundToCents(
     categorySpending.reduce((sum, c) => sum + c.previous, 0)
   );
 

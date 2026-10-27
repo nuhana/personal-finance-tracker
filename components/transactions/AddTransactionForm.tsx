@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createTransaction,
   type TransactionType,
 } from "@/lib/api/transactions";
-import {
-  categorizeTransaction,
-  type CategorizeResultDto,
-} from "@/lib/api/ai";
+import { categorizeTransaction } from "@/lib/api/ai";
+import { getCategories } from "@/lib/api/categories";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +44,8 @@ const transactionSchema = z.object({
         .positive("Amount must be greater than 0")
     ),
   note: z.string(),
+  // Optional: null saves the transaction uncategorized.
+  categoryId: z.string().nullable(),
 });
 
 type TransactionFormInput = z.input<typeof transactionSchema>;
@@ -48,6 +55,7 @@ const defaultValues: TransactionFormInput = {
   type: "EXPENSE",
   amount: "",
   note: "",
+  categoryId: null,
 };
 
 export function AddTransactionDialog() {
@@ -56,7 +64,11 @@ export function AddTransactionDialog() {
   const [open, setOpen] = useState(false);
   // Once the user clicks Income/Expense, the AI must not override it.
   const [typeChosen, setTypeChosen] = useState(false);
-  const [category, setCategory] = useState<CategorizeResultDto | null>(null);
+  // Who set the category: a suggestion is tied to the note it was made for,
+  // a category the user picked is not.
+  const [categorySource, setCategorySource] = useState<"user" | "ai" | null>(
+    null
+  );
 
   const form = useForm<TransactionFormInput, unknown, TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -65,14 +77,33 @@ export function AddTransactionDialog() {
   const { errors } = form.formState;
   const type = form.watch("type");
   const note = form.watch("note");
+  const categoryId = form.watch("categoryId");
+
+  const categories = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
+  const categoriesOfType = (categories.data ?? []).filter(
+    (c) => c.type === type
+  );
+  // A null item gives the "no category" option its label.
+  const categoryItems = [
+    { value: null, label: "No category" },
+    ...categoriesOfType.map((c) => ({ value: c.id, label: c.name })),
+  ];
 
   // Only runs when the user clicks "Suggest", to stay within the AI rate limit.
   const suggestion = useMutation({
     mutationFn: categorizeTransaction,
   });
 
-  function resetSuggestion() {
-    setCategory(null);
+  function setCategory(id: string | null, source: "user" | "ai" | null) {
+    form.setValue("categoryId", id);
+    setCategorySource(id ? source : null);
+  }
+
+  function clearCategory() {
+    setCategory(null, null);
     suggestion.reset();
   }
 
@@ -82,29 +113,56 @@ export function AddTransactionDialog() {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
       queryClient.invalidateQueries({ queryKey: ["wallet"] });
 
-      form.reset(defaultValues);
-      setTypeChosen(false);
-      resetSuggestion();
       setOpen(false);
     },
   });
+
+  // Every way of opening the dialog starts from an empty form, whether it was
+  // last closed by Save, Cancel, Escape or a click outside. Resetting on open
+  // rather than on close keeps the fields from blanking during the close
+  // animation.
+  function onOpenChange(next: boolean) {
+    if (next) {
+      form.reset(defaultValues);
+      setTypeChosen(false);
+      clearCategory();
+      mutation.reset();
+    }
+    setOpen(next);
+  }
 
   function onSubmit(values: TransactionFormValues) {
     mutation.mutate({
       ...values,
       date: new Date().toISOString(),
-      categoryId: category?.categoryId ?? null,
     });
   }
 
   function chooseType(next: TransactionType) {
-    if (type !== next) resetSuggestion();
+    // Categories belong to one type, so the current one no longer fits.
+    if (type !== next) clearCategory();
     form.setValue("type", next);
     setTypeChosen(true);
   }
 
+  function chooseCategory(id: string | null) {
+    // Drops a suggestion still in flight, so it can't replace this choice.
+    suggestion.reset();
+    setCategory(id, "user");
+    // The list only shows categories of the current type, so picking one
+    // confirms that type; a later Suggest must not flip it.
+    if (id) setTypeChosen(true);
+  }
+
+  function onNoteChange() {
+    // A suggestion was made for the old note; a category the user picked
+    // doesn't depend on the note, so it stays.
+    suggestion.reset();
+    if (categorySource === "ai") setCategory(null, null);
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger render={<Button size="sm">+ Add Transaction</Button>} />
 
       <DialogContent>
@@ -161,7 +219,7 @@ export function AddTransactionDialog() {
               <Input
                 id="note"
                 placeholder="Groceries, salary, rent..."
-                {...form.register("note", { onChange: resetSuggestion })}
+                {...form.register("note", { onChange: onNoteChange })}
               />
               <Button
                 type="button"
@@ -174,11 +232,15 @@ export function AddTransactionDialog() {
                       ...(typeChosen ? { type } : {}),
                     },
                     // Passed here, not to useMutation, so it is skipped if
-                    // resetSuggestion() ran while the request was in flight.
+                    // suggestion.reset() ran while the request was in flight.
                     {
                       onSuccess: (result) => {
                         form.setValue("type", result.type);
-                        setCategory(result);
+                        // "Nothing fits" must not wipe a category the user
+                        // picked themselves.
+                        if (result.categoryId || categorySource !== "user") {
+                          setCategory(result.categoryId, "ai");
+                        }
                       },
                     }
                   )
@@ -188,31 +250,53 @@ export function AddTransactionDialog() {
               </Button>
             </div>
 
-            {category?.categoryId && (
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-muted-foreground">Category:</span>
-                <span className="rounded-full border px-2 py-0.5">
-                  {category.categoryName}
-                </span>
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={resetSuggestion}
-                  aria-label="Remove category"
-                >
-                  ✕
-                </button>
-              </div>
+            {suggestion.isError && (
+              <p className="text-xs text-red-500">{suggestion.error.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>Category</Label>
+            <Select
+              items={categoryItems}
+              value={categoryId}
+              onValueChange={(value) => chooseCategory(value as string | null)}
+              disabled={categories.isPending || categories.isError}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder={
+                    categories.isPending
+                      ? "Loading categories..."
+                      : "No category"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryItems.map((item) => (
+                  <SelectItem key={item.value ?? "none"} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {categorySource === "ai" && (
+              <p className="text-xs text-muted-foreground">
+                Suggested by AI. You can change it.
+              </p>
             )}
 
-            {category && !category.categoryId && (
+            {suggestion.data && !suggestion.data.categoryId && !categoryId && (
               <p className="text-xs text-muted-foreground">
                 No matching category found.
               </p>
             )}
 
-            {suggestion.isError && (
-              <p className="text-xs text-red-500">{suggestion.error.message}</p>
+            {categories.isError && (
+              <p className="text-xs text-red-500">
+                Couldn&apos;t load categories.
+              </p>
             )}
           </div>
 

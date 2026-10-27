@@ -65,6 +65,27 @@ export async function POST(req: Request) {
       );
     }
 
+    // The category is optional, but if given it must be one of this user's
+    // categories and match the transaction type (no "Groceries" income).
+    const categoryId = body.categoryId ?? null;
+
+    if (categoryId !== null) {
+      const category =
+        typeof categoryId === "string"
+          ? await prisma.category.findFirst({
+              where: { id: categoryId, userId },
+              select: { type: true },
+            })
+          : null;
+
+      if (!category || category.type !== body.type) {
+        return NextResponse.json(
+          { error: "Invalid category" },
+          { status: 400 }
+        );
+      }
+    }
+
     const signedAmount =
       body.type === "EXPENSE" ? -Math.abs(rawAmount) : Math.abs(rawAmount);
 
@@ -74,7 +95,7 @@ export async function POST(req: Request) {
           data: {
             userId,
             accountId: account.id,
-            categoryId: body.categoryId ?? null,
+            categoryId,
             amount: signedAmount,
             date: transactionDate,
             note: body.note?.trim() || null,
