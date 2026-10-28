@@ -42,6 +42,8 @@ async function main() {
         { name: "Shopping", type: "EXPENSE", color: "#ec4899" },
         { name: "Entertainment", type: "EXPENSE", color: "#eab308" },
         { name: "Health", type: "EXPENSE", color: "#ef4444" },
+        { name: "Education", type: "EXPENSE", color: "#0ea5e9" },
+        { name: "Other Expenses", type: "EXPENSE", color: "#78716c" },
         { name: "Salary", type: "INCOME", color: "#22c55e" },
         { name: "Freelance", type: "INCOME", color: "#14b8a6" },
         { name: "Other Income", type: "INCOME", color: "#64748b" },
